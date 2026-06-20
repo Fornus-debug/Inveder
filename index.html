@@ -14,4 +14,151 @@ try {
 } catch(e) {
   
 }
-</script></body></html>
+</script>
+<!-- FORNUS CHATBOT -->
+<div id="fnbot-wrap" style="position:fixed;bottom:24px;right:24px;z-index:9999;font-family:'DotGothic16',monospace">
+
+  <!-- 開閉ボタン -->
+  <button id="fnbot-toggle" onclick="fnbotToggle()" style="
+    display:flex;align-items:center;gap:8px;
+    background:#000;border:2px solid #FFE600;color:#FFE600;
+    font-family:'Press Start 2P',monospace;font-size:10px;
+    padding:10px 14px;cursor:pointer;
+    box-shadow:0 0 12px rgba(255,230,0,0.6);
+    margin-left:auto;width:fit-content;
+  ">▶ FORNUS</button>
+
+  <!-- チャットパネル -->
+  <div id="fnbot-panel" style="
+    display:none;
+    width:320px;background:#050505;
+    border:2px solid #00D4FF;
+    box-shadow:0 0 20px rgba(0,212,255,0.4);
+    margin-bottom:8px;
+    flex-direction:column;
+  ">
+    <!-- キャラヘッダー -->
+    <div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #1a1a1a;background:#0a0a0a">
+      <!-- キャラ画像プレースホルダー (後で img タグに差し替え) -->
+      <div id="fnbot-avatar" style="
+        width:52px;height:52px;flex-shrink:0;
+        border:2px solid #00D4FF;background:#0a1a2a;
+        display:flex;align-items:center;justify-content:center;
+        font-size:22px;image-rendering:pixelated;
+      ">🤖</div>
+      <div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#00D4FF">FORNUS</div>
+        <div style="font-size:11px;color:#555;margin-top:3px">自動化コンサルタント</div>
+      </div>
+    </div>
+
+    <!-- メッセージエリア -->
+    <div id="fnbot-msgs" style="
+      height:260px;overflow-y:auto;padding:12px;
+      display:flex;flex-direction:column;gap:10px;
+    "></div>
+
+    <!-- 入力エリア -->
+    <div style="padding:10px;border-top:1px solid #1a1a1a;display:flex;gap:6px">
+      <input id="fnbot-input" type="text" placeholder="悩みを入力..." maxlength="100"
+        onkeydown="if(event.key==='Enter')fnbotSend()"
+        style="
+          flex:1;background:#0a0a0a;border:1px solid #333;color:#fff;
+          font-family:'DotGothic16',monospace;font-size:13px;padding:6px 8px;
+          outline:none;
+        ">
+      <button onclick="fnbotSend()" style="
+        background:#FFE600;color:#000;border:none;cursor:pointer;
+        font-family:'Press Start 2P',monospace;font-size:9px;padding:6px 10px;
+      ">▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var open = false;
+
+  window.fnbotToggle = function(){
+    open = !open;
+    var panel = document.getElementById('fnbot-panel');
+    panel.style.display = open ? 'flex' : 'none';
+    if(open && document.getElementById('fnbot-msgs').children.length === 0){
+      fnbotSpeak('こんにちは！Fornusです。\nどんな手作業に悩んでいますか？\n（例：毎月Excelをコピペしてメール送信）');
+    }
+  };
+
+  window.fnbotSend = function(){
+    var input = document.getElementById('fnbot-input');
+    var text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    fnbotUserMsg(text);
+    setTimeout(function(){ fnbotReply(text); }, 600);
+  };
+
+  function fnbotUserMsg(text){
+    var msgs = document.getElementById('fnbot-msgs');
+    var div = document.createElement('div');
+    div.style.cssText = 'display:flex;justify-content:flex-end';
+    div.innerHTML = '<div style="background:#1a1a1a;color:#fff;padding:8px 10px;font-size:13px;max-width:80%;border:1px solid #333">'+escape_html(text)+'</div>';
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  window.fnbotSpeak = function(text){
+    var msgs = document.getElementById('fnbot-msgs');
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:flex-start';
+    var bubble = document.createElement('div');
+    bubble.style.cssText = 'background:#0a1a2a;border:1px solid #00D4FF;color:#00D4FF;padding:8px 10px;font-size:13px;max-width:85%;line-height:1.6;white-space:pre-wrap';
+    row.innerHTML = '<div style="font-size:18px;flex-shrink:0">🤖</div>';
+    row.appendChild(bubble);
+    msgs.appendChild(row);
+    msgs.scrollTop = msgs.scrollHeight;
+    // タイプライター
+    var i = 0;
+    var lines = text;
+    function tick(){
+      if(i < lines.length){
+        bubble.textContent += lines[i++];
+        msgs.scrollTop = msgs.scrollHeight;
+        setTimeout(tick, 18);
+      }
+    }
+    tick();
+  };
+
+  function fnbotReply(text){
+    var t = text;
+    var reply;
+    if(/excel|エクセル|スプレッド|集計|転記/.test(t)){
+      reply = 'それ、GASで自動化できます！\nGoogleスプレッドシートに置き換えて\n集計・転記・通知を全自動にできます。\n\n工数目安：半日〜2日\n費用：基本ゼロ円（GASは無料）';
+    } else if(/メール|mail|通知|送信/.test(t)){
+      reply = 'メール送信の自動化ですね。\nGAS × Gmailで条件トリガー送信が\n作れます。スプレッド更新→即通知も\nお手のものです！';
+    } else if(/pdf|請求|帳票|レポート/.test(t)){
+      reply = 'PDF・帳票の自動生成ですね。\nGASでスプレッドシートから\nPDF出力→メール添付まで全自動化\nできます。';
+    } else if(/sns|インスタ|twitter|x\.com|投稿/.test(t)){
+      reply = 'SNS投稿の自動化ですね。\nGAS + Make(旧Integromat)で\nスプレッドシートに書いたら\n自動投稿できます。';
+    } else if(/予約|カレンダー|schedule/.test(t)){
+      reply = '予約管理の自動化ですね。\nGoogleフォーム×カレンダー×GASで\n予約受付→確認メール→カレンダー登録\nを全自動化できます！';
+    } else if(/ai|chatgpt|claude|文章|チェック|校正/.test(t)){
+      reply = 'AI活用ですね！\nChatGPT/Claude APIを社内ツールと\n連携して、文章チェック・要約・\n分類を半自動化できます。';
+    } else if(/アプリ|システム|web|ウェブ/.test(t)){
+      reply = 'Webアプリ化ですね。\nスプレッドシートの限界を超えたら\nNext.js + GASで専用アプリを\n構築できます。';
+    } else if(/料金|費用|いくら|価格|見積/.test(t)){
+      reply = 'まずはヒアリングから始めます。\n作業内容によって工数が変わるので\n無料相談でざっくり見積もりを\n出せます！お気軽にどうぞ。';
+    } else if(/ありがと|ありがとう|thx|thanks/.test(t)){
+      reply = 'どういたしまして！\nもっと詳しく聞きたい場合は\nお問い合わせからどうぞ。\nお待ちしてます！';
+    } else {
+      reply = 'なるほど、「'+text.slice(0,20)+'」ですね。\n\nもう少し詳しく教えてもらえますか？\n\n・どんな作業をしているか\n・どれくらいの頻度か\n・何に困っているか\n\nで最適な提案ができます！';
+    }
+    fnbotSpeak(reply);
+  }
+
+  function escape_html(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+})();
+</script>
+</body></html>
